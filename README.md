@@ -37,7 +37,7 @@ You can check `docs` at `/docs` endpoint.
 
 | Parameter | Return Type     | Description                |Request Body |
 | :-------- | :------- | :------------------------- |:------ |
-| `user_id` | `User Object` | **Required**. Your API key |`None` |
+| `user_id` | `User Object` | Add new user |`None` |
 
 #### Delete User
 
@@ -47,7 +47,7 @@ You can check `docs` at `/docs` endpoint.
 
 | Parameter | Return Type     | Description                |Request Body |
 | :-------- | :------- | :------------------------- |:------ |
-| `user_id` | `string` | **Required**. Your API key |name, email |
+| `user_id` | `string` | Delete a user |name, email |
 
 #### Get a Order
 
@@ -57,7 +57,7 @@ You can check `docs` at `/docs` endpoint.
 
 | Parameter | Return Type     | Description                |Request Body |
 | :-------- | :------- | :------------------------- |:------ |
-| `user_id` | `Order Object` | **Required**. Your API key |`None` |
+| `user_id` | `Order Object` | Get order |`None` |
 
 #### Update Order
 
@@ -67,7 +67,7 @@ You can check `docs` at `/docs` endpoint.
 
 | Parameter | Return Type     | Description                |Request Body |
 | :-------- | :------- | :------------------------- |:------ |
-| `user_id` | `Order Object | **Required**. Your API key |user_id,quantity,product_name |
+| `user_id` | `Order Object | Update an order |user_id,quantity,product_name |
 
 #### Add Order
 
@@ -77,7 +77,7 @@ You can check `docs` at `/docs` endpoint.
 
 | Parameter | Return Type     | Description                |Request Body |
 | :-------- | :------- | :------------------------- |:------ |
-| `user_id` | `Order Object | **Required**. Your API key |user_id,quantity,product_name |
+| `user_id` | `Order Object | Add an order |user_id,quantity,product_name |
 
 #### Delete Order
 
@@ -87,7 +87,7 @@ You can check `docs` at `/docs` endpoint.
 
 | Parameter | Return Type     | Description                |Request Body |
 | :-------- | :------- | :------------------------- |:------ |
-| `user_id` | `string` | **Required**. Your API key |`None` |
+| `user_id` | `string` | Delete order |`None` |
 
 
 
