@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.exc import IntegrityError
+
 from app.database.db import get_db
 from app.models.models import Order
 from app.schemas import schemas
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 router = APIRouter()
 
@@ -17,10 +19,22 @@ async def get_order(order_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.post("/orders/", response_model=schemas.Order)
 async def create_order(order: schemas.OrderCreate, db: AsyncSession = Depends(get_db)):
-    db_order = Order(user_id=order.user_id, product_name=order.product_name, quantity=order.quantity)
+    db_order = Order(
+        user_id=order.user_id, 
+        product_name=order.product_name, 
+        quantity=order.quantity
+    )
     db.add(db_order)
-    await db.commit()
-    await db.refresh(db_order)
+    
+    try:
+        await db.commit()
+        await db.refresh(db_order)
+    except IntegrityError:
+        # Catches foreign key violations (e.g., user_id doesn't exist) 
+        # or check constraints (e.g., quantity <= 0)
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Invalid request: User ID may not exist or constraint violated.")
+        
     return db_order
 
 @router.put("/orders/{order_id}", response_model=schemas.Order)
@@ -29,14 +43,22 @@ async def update_order(order_id: int, order: schemas.OrderUpdate, db: AsyncSessi
     db_order = result.scalar_one_or_none()
     if not db_order:
         raise HTTPException(status_code=404, detail="Order not found")
-    if order.user_id:
+    
+    # Update only the fields provided by the user
+    if order.user_id is not None:
         db_order.user_id = order.user_id
-    if order.product_name:
+    if order.product_name is not None:
         db_order.product_name = order.product_name
-    if order.quantity:
+    if order.quantity is not None:
         db_order.quantity = order.quantity
-    await db.commit()
-    await db.refresh(db_order)
+
+    try:
+        await db.commit()
+        await db.refresh(db_order)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Invalid request: User ID may not exist or constraint violated.")
+        
     return db_order
 
 @router.delete("/orders/{order_id}")
@@ -45,6 +67,7 @@ async def delete_order(order_id: int, db: AsyncSession = Depends(get_db)):
     order = result.scalar_one_or_none()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+    
     await db.delete(order)
     await db.commit()
     return {"message": "Order deleted successfully"}

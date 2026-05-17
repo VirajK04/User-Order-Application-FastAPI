@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
+
 from app.database.db import get_db
 from app.models.models import User
 from app.schemas import schemas
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 router = APIRouter()
 
@@ -13,6 +16,23 @@ async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@router.get("/users/{user_id}/orders", response_model=schemas.UserWithOrders)
+async def get_user_with_orders(user_id: int, db: AsyncSession = Depends(get_db)):
+    # Eager load orders using selectinload
+    stmt = (
+        select(User)
+        .options(selectinload(User.orders))
+        .filter(User.id == user_id)
+    )
+    
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
     return user
 
 @router.post("/users/", response_model=schemas.User)
@@ -29,7 +49,7 @@ async def create_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_d
 
 @router.put("/users/{user_id}", response_model=schemas.User)
 async def update_user(user_id: int, user: schemas.UserUpdate, db: AsyncSession = Depends(get_db)):
-    result =await db.execute(select(User).filter(User.id == user_id))
+    result = await db.execute(select(User).filter(User.id == user_id))
     db_user = result.scalar_one_or_none()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -39,8 +59,13 @@ async def update_user(user_id: int, user: schemas.UserUpdate, db: AsyncSession =
     if user.email:
         db_user.email = user.email
 
-    await db.commit()
-    await db.refresh(db_user)
+    try:
+        await db.commit()
+        await db.refresh(db_user)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Email already registered")
+        
     return db_user
 
 @router.delete("/users/{user_id}")

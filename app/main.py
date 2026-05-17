@@ -1,27 +1,34 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
+
+from app.database.db import engine
+
+from app.models.models import Base
 
 from app.routes import user_routes, order_routes
 
-from app.routes.tables import create_tables
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Application starting: Initializing database tables...")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    
+    yield 
+    
+    print("Application shutting down: Disposing database engine...")
+    await engine.dispose()
 
-from app.database.db import get_db
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+app = FastAPI(
+    title="User-Order Async API",
+    description="High-performance async backend for users and orders",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
-app = FastAPI()
+app.include_router(user_routes.router, prefix="/api", tags=["Users"])
+app.include_router(order_routes.router, prefix="/api", tags=["Orders"])
 
-@app.on_event("startup")
-async def startup_event():
-    db_generator = get_db()  # Create the async generator
-    db: AsyncSession = await anext(db_generator)  # Get the first value from the generator
-    try:
-        await create_tables(db)  # Pass the session to your function
-    finally:
-        await db.close()  # Ensure the session is closed
-
+# Optional root endpoint for a quick health check
 @app.get("/")
-async def read_root():
-    return {"message": "Hello, World!"}
-
-app.include_router(user_routes.router)
-app.include_router(order_routes.router)
+async def root():
+    return {"message": "API is online and running asynchronously!"}

@@ -2,54 +2,45 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 
-class UserCreate(BaseModel):
+# --- User Schemas ---
+class UserBase(BaseModel):
     name: str
     email: EmailStr
 
-    class Config:
-        orm_mode = True
+class UserCreate(UserBase):
+    pass
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
 
-    class Config:
-        orm_mode = True
-
-from pydantic import BaseModel, EmailStr
-from datetime import datetime
-
-class User(BaseModel):
+class User(UserBase):
     id: int
-    name: str
-    email: EmailStr
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-class Order(BaseModel):
-    id: int
-    user_id: int
-    product_name: str
-    quantity: int
-    order_date: datetime
-
-    class Config:
-        orm_mode = True
-
-class OrderCreate(BaseModel):
+# --- Order Schemas ---
+class OrderBase(BaseModel):
     user_id: int
     product_name: str
     quantity: int
 
-    class Config:
-        orm_mode = True
+class OrderCreate(OrderBase):
+    pass
 
 class OrderUpdate(BaseModel):
     user_id: Optional[int] = None
     product_name: Optional[str] = None
     quantity: Optional[int] = None
 
+class Order(OrderBase):
+    id: int
+    order_date: datetime
+
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class UserWithOrders(User):
+    orders: list[Order] = []
