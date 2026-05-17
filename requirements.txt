@@ -4,3 +4,4 @@ asyncpg
 uvicorn
 pydantic[email]
 python-dotenv
+locust
