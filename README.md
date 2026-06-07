@@ -132,3 +132,39 @@ The virtual users (spawned by Locust) perform the following tasks:
    - **Host:** `http://127.0.0.1:8001` (The address of your FastAPI server)
 
 5. Click **"Start swarming"** to begin the load test. You can monitor request statistics, charts, response times, and failure rates live in the Locust dashboard.
+
+---
+
+## Load Test Results
+
+Below are the results from the load test conducted with **100 concurrent users** and a **10 users/sec spawn rate**. The application demonstrated excellent performance with **0% failure rate** and an average throughput of **~55.5 requests/second (RPS)**.
+
+### Request Statistics
+
+| Request Type | Endpoint / Name | # Requests | # Fails | Average (ms) | Min (ms) | Max (ms) | Average Size (bytes) | RPS | Failures/s |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **POST** | `/api/orders/` | 1,684 | 0 | 271.10 | 8 | 2,301 | 106.44 | 19.93 | 0 |
+| **POST** | `/api/users/` | 654 | 0 | 286.89 | 9 | 2,512 | 105.99 | 7.74 | 0 |
+| **GET** | `/api/users/[id]/orders` | 2,353 | 0 | 208.66 | 6 | 2,243 | 992.85 | 27.84 | 0 |
+| **Aggregated** | **Total** | **4,691** | **0** | **241.98** | **6** | **2,512** | **551.00** | **55.51** | **0** |
+
+### Task Distribution Ratio
+
+- **fetchUserDashboard:** 50.0% (Weight: 4)
+- **createOrder:** 37.5% (Weight: 3)
+- **createNewUser:** 12.5% (Weight: 1)
+
+### Performance Charts
+
+#### Total Requests per Second & Response Times
+![Total Requests per Second & Response Times](load%20test%20results/Screenshot%202026-06-07%20170913.png)
+
+#### Response Times & User Spawning Timeline
+![Response Times & User Spawning Timeline](load%20test%20results/Screenshot%202026-06-07%20170712.png)
+
+#### Final Ratio
+![Final Ratio](load%20test%20results/Screenshot%202026-06-07%20170725.png)
+
+#### Detailed Request Statistics
+![Request Statistics Table](load%20test%20results/Screenshot%202026-06-07%20170736.png)
+
